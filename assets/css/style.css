@@ -1,0 +1,205 @@
+/* Dalton Thompson — personal site
+   Warm, clean, music-themed design. */
+
+:root {
+  --bg: #fbf7f1;
+  --surface: #ffffff;
+  --ink: #2b2620;
+  --muted: #6f675c;
+  --accent: #e07a2f;
+  --accent-dark: #c4651f;
+  --secondary: #2f6e5e;
+  --border: #ece4d8;
+  --radius: 14px;
+  --shadow: 0 10px 30px rgba(43, 38, 32, 0.08);
+  --font-body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Archivo Black", "Barlow", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Header / nav */
+.site-header {
+  position: sticky;
+  top: 0;
+  background: rgba(251, 247, 241, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+}
+
+.nav-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+.brand span { color: var(--accent); }
+
+.nav { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.nav a:hover { color: var(--ink); background: var(--border); }
+
+.nav a.active { color: #fff; background: var(--accent); }
+
+/* Hero */
+.hero {
+  padding: 72px 0 56px;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  line-height: 1.1;
+  margin: 0 0 16px;
+}
+
+.hero .accent { color: var(--accent); }
+
+.lead {
+  font-size: 1.25rem;
+  color: var(--muted);
+  max-width: 620px;
+  margin: 0 0 28px;
+}
+
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* Page hero (inner pages) */
+.page-hero { padding: 48px 0 24px; }
+
+.page-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0 0 8px;
+}
+
+/* Sections */
+.section { padding: 48px 0; }
+.section-alt { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  margin: 0 0 20px;
+}
+
+.muted { color: var(--muted); }
+
+/* Cards */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-body { padding: 26px; }
+
+.card h3 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  margin: 10px 0 8px;
+}
+
+.card p { color: var(--muted); margin: 0 0 18px; }
+
+.card-featured { max-width: 720px; }
+
+.card-placeholder {
+  background: repeating-linear-gradient(45deg, #fff, #fff 12px, #faf6ef 12px, #faf6ef 24px);
+}
+
+/* Tags */
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--secondary);
+  background: #e7f0ec;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  transition: transform 0.1s, box-shadow 0.15s, background 0.15s, color 0.15s;
+}
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(224, 122, 47, 0.35); }
+
+.btn-ghost { border-color: var(--border); color: var(--ink); background: var(--surface); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn.disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+
+/* Footer */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.site-footer p { margin: 0; }
+
+/* Responsive */
+@media (max-width: 560px) {
+  .hero { padding: 48px 0 40px; }
+  .nav-wrap { flex-direction: column; align-items: flex-start; }
+}

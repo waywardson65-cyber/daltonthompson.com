@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fret Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tolex:#191c23;
+    --tolex-2:#22262f;
+    --panel:#e9dfc4;
+    --panel-ink:#33291c;
+    --panel-line:#b9ac8a;
+    --board:#4b2e23;
+    --board-deep:#3a2119;
+    --fretwire:#c8ccd4;
+    --string:#d8dbe0;
+    --inlay:#efe8d6;
+    --jewel:#f3a93c;
+    --go:#74b95a;
+    --red:#d6503f;
+    --display:"Archivo Black", Impact, "Franklin Gothic Bold", "Arial Narrow", sans-serif;
+    --body:"Barlow", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--body);
+    background:var(--tolex);
+    background-image:
+      repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 2px, transparent 2px 4px),
+      repeating-linear-gradient(-45deg, rgba(0,0,0,.22) 0 2px, transparent 2px 4px);
+    color:var(--panel);
+    min-height:100vh;
+    padding:18px 14px 40px;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:940px;margin:0 auto}
+
+  /* ---------- masthead ---------- */
+  .mast{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .mast h1{
+    font-family:var(--display);
+    font-size:clamp(30px,7vw,52px);
+    letter-spacing:.01em;
+    margin:0;color:var(--panel);
+    text-shadow:0 2px 0 rgba(0,0,0,.5);
+  }
+  .mast p{margin:0;color:#a9a293;font-size:15px}
+
+  /* ---------- panel ---------- */
+  .panel{
+    background:var(--panel);
+    color:var(--panel-ink);
+    border-radius:6px;
+    padding:20px;
+    box-shadow:0 1px 0 #fff inset, 0 10px 24px rgba(0,0,0,.45);
+    border:1px solid #cbbf9d;
+  }
+  .panel h2{font-family:var(--display);font-size:22px;margin:0 0 4px;letter-spacing:.01em}
+  .panel .sub{margin:0 0 16px;color:#6f6249;font-size:15px}
+
+  /* ---------- level list ---------- */
+  .levels{list-style:none;margin:0;padding:0}
+  .levels li + li{border-top:1px solid var(--panel-line)}
+  .lvl{
+    width:100%;display:flex;align-items:center;gap:14px;
+    background:none;border:0;padding:13px 6px;text-align:left;
+    font:inherit;color:inherit;cursor:pointer;border-radius:4px;
+  }
+  .lvl:hover:not(:disabled){background:rgba(0,0,0,.05)}
+  .lvl:disabled{cursor:default;opacity:.42}
+  .jewel{
+    width:20px;height:20px;border-radius:50%;flex:none;
+    background:#8d8368;
+    box-shadow:0 0 0 2px rgba(0,0,0,.25) inset;
+  }
+  .jewel.lit{background:var(--jewel);box-shadow:0 0 0 2px rgba(0,0,0,.2) inset,0 0 10px rgba(243,169,60,.85)}
+  .jewel.done{background:var(--go);box-shadow:0 0 0 2px rgba(0,0,0,.2) inset,0 0 10px rgba(116,185,90,.7)}
+  .lvl-text{flex:1;min-width:0}
+  .lvl-name{font-weight:600;font-size:16px}
+  .lvl-note{font-size:13.5px;color:#6f6249}
+  .stars{font-size:14px;letter-spacing:2px;color:var(--jewel);flex:none}
+  .stars .off{color:#c3b795}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    font:inherit;font-weight:600;font-size:15px;
+    padding:11px 20px;border-radius:4px;cursor:pointer;
+    border:1px solid #2b2317;background:#33291c;color:var(--panel);
+  }
+  .btn:hover{background:#453824}
+  .btn.light{background:transparent;color:var(--panel-ink);border-color:var(--panel-line)}
+  .btn.light:hover{background:rgba(0,0,0,.06)}
+  .btn.amber{background:var(--jewel);color:#3a2a10;border-color:#c2831f}
+  .btn.amber:hover{background:#f7bb5c}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  :focus-visible{outline:3px solid var(--jewel);outline-offset:2px}
+
+  /* ---------- neck ---------- */
+  .neck-scroll{overflow-x:auto;overflow-y:hidden;padding-bottom:4px}
+  .neck-wrap{display:flex;gap:8px;align-items:stretch;margin:0 auto}
+  .snames{display:flex;flex-direction:column;flex:none;width:30px}
+  .snames span{
+    flex:1;display:flex;align-items:center;justify-content:flex-end;
+    font-size:12px;color:#8e8674;font-variant-numeric:tabular-nums;
+  }
+  .neck{
+    position:relative;flex:1;height:clamp(168px,33vw,224px);
+    background:linear-gradient(180deg,#553527 0%,var(--board) 45%,var(--board-deep) 100%);
+    border-radius:3px;
+    box-shadow:0 6px 18px rgba(0,0,0,.5), 0 0 0 1px #241611;
+  }
+  .fretwire{position:absolute;top:0;bottom:0;width:2px;background:linear-gradient(90deg,#8e939c,var(--fretwire),#7f848d)}
+  .nut{position:absolute;top:0;bottom:0;width:7px;background:linear-gradient(90deg,#efe6d2,#cbc0a6);border-radius:1px}
+  .inlay{position:absolute;width:11px;height:11px;border-radius:50%;background:var(--inlay);opacity:.75;transform:translate(-50%,-50%);pointer-events:none}
+  .stringline{position:absolute;left:0;right:0;background:linear-gradient(180deg,#f2f4f7,var(--string) 40%,#8d929b);pointer-events:none;box-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .cell{
+    position:absolute;background:transparent;border:0;padding:0;margin:0;
+    cursor:pointer;color:#fff;font:inherit;font-weight:600;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .neck.static .cell{cursor:default}
+  .dotmark{
+    width:min(30px,74%);aspect-ratio:1;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;line-height:1;opacity:0;transform:scale(.6);
+    transition:opacity .13s, transform .13s;
+  }
+  @media (prefers-reduced-motion:reduce){.dotmark{transition:none}}
+  .cell:hover .dotmark{opacity:.3;transform:scale(1);background:#fff}
+  .neck.static .cell:hover .dotmark{opacity:0}
+  .cell.open .dotmark{background:none;opacity:1;transform:none;color:#f0e7d5;font-size:14px}
+  .cell.on .dotmark{opacity:1;transform:scale(1);background:#fff;color:#2a1a12}
+  .cell.target .dotmark{opacity:1;transform:scale(1);background:var(--jewel);color:#3a2a10;box-shadow:0 0 14px rgba(243,169,60,.9)}
+  .cell.good .dotmark{opacity:1;transform:scale(1);background:var(--go);color:#123008;box-shadow:0 0 14px rgba(116,185,90,.8)}
+  .cell.bad .dotmark{opacity:1;transform:scale(1);background:var(--red);color:#fff;animation:nudge .3s}
+  .cell.alt .dotmark{opacity:1;transform:scale(1);background:rgba(116,185,90,.28);color:#eafce2;box-shadow:0 0 0 2px var(--go) inset}
+  @keyframes nudge{0%,100%{translate:0}25%{translate:-4px}75%{translate:4px}}
+  @media (prefers-reduced-motion:reduce){.cell.bad .dotmark{animation:none}}
+
+  /* ---------- play HUD ---------- */
+  .hud{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .hud .where{font-weight:600;font-size:15px;flex:1;min-width:140px}
+  .pips{display:flex;gap:5px}
+  .pip{width:9px;height:9px;border-radius:50%;background:#c3b795}
+  .pip.hit{background:var(--go)}
+  .pip.miss{background:var(--red)}
+  .pip.now{background:var(--jewel);box-shadow:0 0 8px rgba(243,169,60,.8)}
+  .tally{font-weight:600;font-variant-numeric:tabular-nums}
+
+  .ask{
+    font-family:var(--display);font-size:clamp(21px,4.6vw,30px);
+    margin:14px 0 4px;line-height:1.15;
+  }
+  .ask small{font-family:var(--body);font-weight:500;font-size:15px;display:block;color:#6f6249;margin-top:5px;letter-spacing:0}
+  .verdict{min-height:24px;font-weight:600;font-size:16px;margin:8px 0 0}
+  .verdict.good{color:#3d7a26}
+  .verdict.bad{color:#a83527}
+
+  .choices{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .choice{
+    font:inherit;font-weight:600;font-size:19px;min-width:66px;
+    padding:13px 16px;cursor:pointer;
+    background:#33291c;color:var(--panel);border:1px solid #2b2317;border-radius:4px;
+  }
+  .choice:hover:not(:disabled){background:#453824}
+  .choice.good{background:var(--go);color:#12300a;border-color:#4d8c36}
+  .choice.bad{background:var(--red);color:#fff;border-color:#a83527}
+  .choice:disabled{cursor:default}
+
+  .timerbar{height:8px;background:#cfc3a2;border-radius:4px;overflow:hidden;margin-top:12px}
+  .timerbar i{display:block;height:100%;background:var(--jewel);width:100%}
+
+  .lesson ul{margin:0 0 4px;padding-left:20px;line-height:1.65}
+  .lesson li{margin-bottom:6px}
+  .lesson b{background:rgba(243,169,60,.35);padding:0 3px;border-radius:2px}
+
+  .bigscore{font-family:var(--display);font-size:44px;margin:6px 0}
+  .starline{font-size:34px;letter-spacing:6px;color:var(--jewel)}
+  .starline .off{color:#c3b795}
+  .hidden{display:none !important}
+  footer{margin-top:16px;color:#7d7666;font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mast">
+    <h1>Fret Quest</h1>
+    <p>Learn every note on the guitar neck</p>
+  </div>
+
+  <!-- MAP -->
+  <section id="screen-map" class="panel">
+    <div id="mapNeck" style="margin-bottom:18px"></div>
+    <h2>Choose a level</h2>
+    <p class="sub">Each level starts with a short lesson, then eight questions, then a 20-second speed round.</p>
+    <ul class="levels" id="levelList"></ul>
+    <div class="row">
+      <button class="btn light" id="btnExplore">Explore the neck</button>
+      <button class="btn light" id="btnReset">Reset progress</button>
+    </div>
+  </section>
+
+  <!-- LESSON -->
+  <section id="screen-lesson" class="panel hidden">
+    <h2 id="lessonTitle"></h2>
+    <p class="sub" id="lessonSub"></p>
+    <div class="lesson" id="lessonBody"></div>
+    <div id="lessonNeck" style="margin-top:16px"></div>
+    <div class="row">
+      <button class="btn amber" id="btnStartQs">Start the questions</button>
+      <button class="btn light" id="btnLessonBack">Back to levels</button>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section id="screen-play" class="panel hidden">
+    <div class="hud">
+      <span class="where" id="playWhere"></span>
+      <span class="pips" id="pips"></span>
+      <span class="tally" id="tally"></span>
+    </div>
+    <p class="ask" id="ask"></p>
+    <div id="playNeck"></div>
+    <div class="choices" id="choices"></div>
+    <p class="verdict" id="verdict"></p>
+    <div class="timerbar hidden" id="timerbar"><i id="timerfill"></i></div>
+    <div class="row">
+      <button class="btn light" id="btnHint">Hint</button>
+      <button class="btn light" id="btnQuit">Leave level</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="screen-result" class="panel hidden">
+    <h2 id="resTitle"></h2>
+    <p class="sub" id="resSub"></p>
+    <div class="starline" id="resStars"></div>
+    <div class="bigscore" id="resScore"></div>
+    <p id="resDetail" style="color:#6f6249;margin:0"></p>
+    <div class="row">
+      <button class="btn amber" id="btnNext">Next level</button>
+      <button class="btn light" id="btnRetry">Play again</button>
+      <button class="btn light" id="btnHome">Back to levels</button>
+    </div>
+  </section>
+
+  <!-- EXPLORE -->
+  <section id="screen-explore" class="panel hidden">
+    <h2>Explore the neck</h2>
+    <p class="sub">Tap anywhere to hear the note and see its name. Nothing is scored here.</p>
+    <div id="exploreNeck"></div>
+    <p class="ask" id="exploreLabel" style="min-height:38px"></p>
+    <div class="row">
+      <button class="btn light" id="btnExploreBack">Back to levels</button>
+    </div>
+  </section>
+
+  <footer>Standard tuning, low to high: E A D G B E</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ music model ============ */
+var NAMES = ['C','C\u266F','D','D\u266F','E','F','F\u266F','G','G\u266F','A','A\u266F','B'];
+/* index 0 = 1st string (high E) ... index 5 = 6th string (low E) */
+var OPEN_PC   = [4, 11, 7, 2, 9, 4];
+var OPEN_MIDI = [64, 59, 55, 50, 45, 40];
+var SLABEL    = ['1 e','2 B','3 G','4 D','5 A','6 E'];
+var SWORD     = ['1st string','2nd string','3rd string','4th string','5th string','6th string'];
+var ALL = [0,1,2,3,4,5];
+
+function noteAt(s, f){ return NAMES[(OPEN_PC[s] + f) % 12]; }
+function isNatural(n){ return n.length === 1; }
+function midiAt(s, f){ return OPEN_MIDI[s] + f; }
+
+var FLATS = { 'C\u266F':'D\u266D', 'D\u266F':'E\u266D', 'F\u266F':'G\u266D', 'G\u266F':'A\u266D', 'A\u266F':'B\u266D' };
+function flatOf(n){ return FLATS[n] || ''; }
+/* "F#" or "F# (also called Gb)" */
+function bothNames(n){ return isNatural(n) ? n : n + ' (also called ' + flatOf(n) + ')'; }
+
+/* ============ levels ============ */
+var LEVELS = [
+  {
+    id:'open', name:'The six open strings', note:'Nothing pressed down',
+    strings:ALL, frets:[0], maxFret:3, openNames:false, sharps:false,
+    lesson:[
+      'An open string is a string you play without pressing any fret.',
+      'From the thickest string to the thinnest, they are <b>E A D G B E</b>.',
+      'Guitarists number them backwards: the thinnest is the 1st string, the thickest is the 6th.',
+      'A sentence that sticks: <b>E</b>ddie <b>A</b>te <b>D</b>ynamite, <b>G</b>ood <b>B</b>ye <b>E</b>ddie.'
+    ]
+  },
+  {
+    id:'e6', name:'6th string: E F G A', note:'Thickest string, the letter notes',
+    strings:[5], frets:[0,1,3,5], maxFret:5, openNames:true, sharps:false,
+    lesson:[
+      'On the thickest string, open is <b>E</b>.',
+      'One fret up is <b>F</b> \u2014 E and F are neighbours with nothing in between.',
+      'Fret 3 is <b>G</b>, fret 5 is <b>A</b>.',
+      'This string is where power chords and riffs usually start, so it is worth knowing cold.'
+    ]
+  },
+  {
+    id:'half', name:'Half steps and sharps', note:'The frets in between, on the 6th string',
+    strings:[5], frets:[0,1,2,3,4,5], maxFret:5, openNames:true, sharps:true,
+    lesson:[
+      'One fret is one <b>half step</b> \u2014 the smallest move you can make on a guitar.',
+      'A <b>sharp</b> (\u266F) is one fret higher than the letter. Fret 2 here is <b>F\u266F</b>, one fret above F.',
+      'That same fret is also called <b>G\u266D</b>, one fret below G. Same sound, two names, depending which way you are heading.',
+      'There is no note between <b>E and F</b>, or between <b>B and C</b>. Those letters are already neighbours.',
+      'So this string reads: E, F, F\u266F, G, G\u266F, A.'
+    ]
+  },
+  {
+    id:'a5', name:'5th string, every fret', note:'A A\u266F B C C\u266F D',
+    strings:[4], frets:[0,1,2,3,4,5], maxFret:5, openNames:true, sharps:true,
+    lesson:[
+      'Open is <b>A</b>. Then A\u266F, <b>B</b>, <b>C</b>, C\u266F, <b>D</b> \u2014 one fret each.',
+      'Watch fret 2 to fret 3: B straight to C, no sharp between them.',
+      'The letters you already know sit at frets 0, 2, 3 and 5. The sharps fill the gaps.'
+    ]
+  },
+  {
+    id:'dg', name:'4th and 3rd strings', note:'Every fret up to the 5th',
+    strings:[3,2], frets:[0,1,2,3,4,5], maxFret:5, openNames:true, sharps:true,
+    lesson:[
+      '4th string: <b>D</b>, D\u266F, <b>E</b>, <b>F</b>, F\u266F, <b>G</b>.',
+      '3rd string: <b>G</b>, G\u266F, <b>A</b>, A\u266F, <b>B</b>, <b>C</b>.',
+      'Fret 5 of the 4th string is G \u2014 the same note as the open 3rd string. That is how you tune by ear.',
+      'Both strings hit a no-sharp pair: E to F on one, B to C on the other.'
+    ]
+  },
+  {
+    id:'be', name:'2nd and 1st strings', note:'Every fret up to the 5th',
+    strings:[1,0], frets:[0,1,2,3,4,5], maxFret:5, openNames:true, sharps:true,
+    lesson:[
+      '2nd string: <b>B</b>, <b>C</b>, C\u266F, <b>D</b>, D\u266F, <b>E</b>.',
+      '1st string: <b>E</b>, <b>F</b>, F\u266F, <b>G</b>, G\u266F, <b>A</b>.',
+      'Both start with a one-fret jump, because B\u2013C and E\u2013F have no sharp between them.',
+      'The 1st and 6th strings have identical note names, two octaves apart. Learn one, get one free.'
+    ]
+  },
+  {
+    id:'dots', name:'The dot frets', note:'Frets 5, 7, 9 and 12, all six strings',
+    strings:ALL, frets:[5,7,9,12], maxFret:12, openNames:true, sharps:true,
+    lesson:[
+      'The dots are landmarks. They sit at frets 3, 5, 7, 9, and a double dot at 12.',
+      'Fret 12 is special: every string repeats its open note there, one octave higher.',
+      'Plenty of dot notes are sharps \u2014 fret 7 of the 2nd string is F\u266F, fret 9 of the 1st is C\u266F.',
+      'Know the dots and you can count one or two frets either side to reach anything else.'
+    ]
+  },
+  {
+    id:'whole', name:'The whole neck', note:'All 12 frets, sharps included',
+    strings:ALL, frets:[0,1,2,3,4,5,6,7,8,9,10,11,12], maxFret:12, openNames:true, sharps:true,
+    lesson:[
+      'Everything at once, open string up to the 12th fret.',
+      'Most notes appear in several places. Any correct spot counts.',
+      'When you are stuck: find the nearest dot, name it, then count half steps.'
+    ]
+  }
+];
+
+/* ============ audio ============ */
+var actx = null;
+function audio(){
+  if(!actx){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    actx = new AC();
+  }
+  if(actx.state === 'suspended'){ actx.resume(); }
+  return actx;
+}
+/* Karplus-Strong plucked string */
+function pluck(midi){
+  var c = audio(); if(!c) return;
+  var freq = 440 * Math.pow(2, (midi - 69) / 12);
+  var sr = c.sampleRate, dur = 1.6;
+  var N = Math.round(sr / freq);
+  var len = Math.floor(sr * dur);
+  var buf = c.createBuffer(1, len, sr);
+  var y = buf.getChannelData(0);
+  var i;
+  for(i = 0; i < N; i++){ y[i] = Math.random() * 2 - 1; }
+  var damp = 0.996;
+  for(i = N; i < len; i++){ y[i] = damp * 0.5 * (y[i - N] + y[i - N + 1]); }
+  var src = c.createBufferSource(); src.buffer = buf;
+  var lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3400;
+  var g = c.createGain();
+  g.gain.setValueAtTime(0.0001, c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.5, c.currentTime + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+  src.connect(lp); lp.connect(g); g.connect(c.destination);
+  src.start();
+}
+function blip(freqs, type, vol){
+  var c = audio(); if(!c) return;
+  freqs.forEach(function(f, k){
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = f;
+    var t = c.currentTime + k * 0.09;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    o.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t + 0.25);
+  });
+}
+function sfxGood(){ blip([784, 1175], 'triangle', 0.16); }
+function sfxBad(){ blip([146], 'sawtooth', 0.13); }
+
+/* ============ neck rendering ============ */
+function scalePos(fret){ return 1 - Math.pow(2, -fret / 12); }
+
+function buildNeck(host, opt){
+  var maxFret = opt.maxFret, interactive = !!opt.onPick;
+  host.innerHTML = '';
+  var scroll = document.createElement('div'); scroll.className = 'neck-scroll';
+  var wrap = document.createElement('div'); wrap.className = 'neck-wrap';
+  wrap.style.maxWidth = (maxFret <= 5 ? 540 : 900) + 'px';
+  wrap.style.minWidth = (maxFret <= 5 ? 0 : 560) + 'px';
+
+  var names = document.createElement('div'); names.className = 'snames';
+  for(var s = 0; s < 6; s++){
+    var sp = document.createElement('span'); sp.textContent = SLABEL[s]; names.appendChild(sp);
+  }
+  var neck = document.createElement('div'); neck.className = 'neck' + (interactive ? '' : ' static');
+
+  var openW = 0.1, L = scalePos(maxFret) || 1;
+  function leftOf(f){ return f === 0 ? 0 : openW + (scalePos(f - 1) / L) * (1 - openW); }
+  function widthOf(f){
+    return f === 0 ? openW : ((scalePos(f) - scalePos(f - 1)) / L) * (1 - openW);
+  }
+
+  /* inlays */
+  [3,5,7,9,12].forEach(function(f){
+    if(f > maxFret) return;
+    var cx = (leftOf(f) + widthOf(f) / 2) * 100;
+    var ys = (f === 12) ? [30, 70] : [50];
+    ys.forEach(function(y){
+      var d = document.createElement('div'); d.className = 'inlay';
+      d.style.left = cx + '%'; d.style.top = y + '%';
+      neck.appendChild(d);
+    });
+  });
+  /* nut + fret wires */
+  var nut = document.createElement('div'); nut.className = 'nut';
+  nut.style.left = 'calc(' + (openW * 100) + '% - 3px)';
+  neck.appendChild(nut);
+  for(var f = 1; f <= maxFret; f++){
+    var w = document.createElement('div'); w.className = 'fretwire';
+    w.style.left = 'calc(' + ((leftOf(f) + widthOf(f)) * 100) + '% - 1px)';
+    neck.appendChild(w);
+  }
+  /* strings */
+  for(var s2 = 0; s2 < 6; s2++){
+    var ln = document.createElement('div'); ln.className = 'stringline';
+    ln.style.height = (1 + s2 * 0.45) + 'px';
+    ln.style.top = 'calc(' + ((s2 + 0.5) * (100 / 6)) + '% - ' + ((1 + s2 * 0.45) / 2) + 'px)';
+    neck.appendChild(ln);
+  }
+  /* cells */
+  var cells = [];
+  for(var st = 0; st < 6; st++){
+    cells[st] = [];
+    for(var fr = 0; fr <= maxFret; fr++){
+      var b = document.createElement('button');
+      b.className = 'cell';
+      b.type = 'button';
+      b.style.left = (leftOf(fr) * 100) + '%';
+      b.style.width = (widthOf(fr) * 100) + '%';
+      b.style.top = (st * (100 / 6)) + '%';
+      b.style.height = (100 / 6) + '%';
+      b.setAttribute('aria-label', SWORD[st] + ', ' + (fr === 0 ? 'open' : 'fret ' + fr));
+      var m = document.createElement('span'); m.className = 'dotmark';
+      b.appendChild(m);
+      if(!interactive){ b.tabIndex = -1; }
+      (function(cs, cf, btn){
+        btn.addEventListener('click', function(){ if(opt.onPick) opt.onPick(cs, cf, btn); });
+      })(st, fr, b);
+      neck.appendChild(b);
+      cells[st][fr] = b;
+    }
+  }
+  wrap.appendChild(names); wrap.appendChild(neck);
+  scroll.appendChild(wrap); host.appendChild(scroll);
+  return { cells: cells, maxFret: maxFret, root: neck };
+}
+
+function clearMarks(board){
+  if(!board) return;
+  board.cells.forEach(function(row){
+    row.forEach(function(b){
+      b.className = 'cell';
+      b.firstChild.textContent = '';
+    });
+  });
+}
+function showOpenNames(board){
+  for(var s = 0; s < 6; s++){
+    var b = board.cells[s][0];
+    b.classList.add('open');
+    b.firstChild.textContent = noteAt(s, 0);
+  }
+}
+function mark(board, s, f, cls, text){
+  var b = board.cells[s] && board.cells[s][f];
+  if(!b) return;
+  b.classList.remove('open');
+  b.classList.add(cls);
+  b.firstChild.textContent = text === undefined ? '' : text;
+}
+
+/* ============ progress ============ */
+var SAVE_KEY = 'fretquest:v1';
+var progress = { done: {} };
+
+function saveProgress(){
+  try{
+    if(window.storage && window.storage.set){
+      window.storage.set(SAVE_KEY, JSON.stringify(progress)).catch(function(){});
+    }
+  }catch(e){}
+}
+function loadProgress(){
+  try{
+    if(window.storage && window.storage.get){
+      return window.storage.get(SAVE_KEY).then(function(r){
+        if(r && r.value){ progress = JSON.parse(r.value) || { done:{} }; }
+        if(!progress.done) progress.done = {};
+      }).catch(function(){});
+    }
+  }catch(e){}
+  return Promise.resolve();
+}
+
+/* ============ screens ============ */
+var SCREENS = ['map','lesson','play','result','explore'];
+function show(name){
+  SCREENS.forEach(function(n){
+    document.getElementById('screen-' + n).classList.toggle('hidden', n !== name);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============ level map ============ */
+function unlocked(i){
+  return i === 0 || !!progress.done[LEVELS[i - 1].id];
+}
+function starStr(n){
+  var out = '';
+  for(var i = 0; i < 3; i++){ out += i < n ? '\u2605' : '<span class="off">\u2605</span>'; }
+  return out;
+}
+function renderMap(){
+  var ul = document.getElementById('levelList');
+  ul.innerHTML = '';
+  LEVELS.forEach(function(lv, i){
+    var li = document.createElement('li');
+    var b = document.createElement('button');
+    b.className = 'lvl';
+    var open = unlocked(i);
+    var rec = progress.done[lv.id];
+    b.disabled = !open;
+    var jcls = rec ? 'jewel done' : (open ? 'jewel lit' : 'jewel');
+    b.innerHTML =
+      '<span class="' + jcls + '"></span>' +
+      '<span class="lvl-text"><span class="lvl-name">' + lv.name + '</span><br>' +
+      '<span class="lvl-note">' + (open ? lv.note : 'Clear the level above to open this') + '</span></span>' +
+      '<span class="stars">' + (rec ? starStr(rec.stars) : '') + '</span>';
+    b.addEventListener('click', function(){ openLesson(i); });
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+}
+
+/* ============ game state ============ */
+var G = {
+  li: 0, lv: null, board: null,
+  qi: 0, total: 8, right: 0, wrong: 0, hinted: false,
+  mode: 'find', target: null, locked: false,
+  phase: 'quiz', bonusScore: 0, streak: 0, tEnd: 0, tRaf: 0
+};
+
+function targetsFor(lv){
+  var out = [];
+  lv.strings.forEach(function(s){
+    lv.frets.forEach(function(f){
+      var n = noteAt(s, f);
+      if(!lv.sharps && !isNatural(n)) return;
+      out.push({ s: s, f: f, n: n });
+    });
+  });
+  return out;
+}
+
+function openLesson(i){
+  G.li = i; G.lv = LEVELS[i];
+  document.getElementById('lessonTitle').textContent = G.lv.name;
+  document.getElementById('lessonSub').textContent = G.lv.note;
+  var ul = '<ul>' + G.lv.lesson.map(function(t){ return '<li>' + t + '</li>'; }).join('') + '</ul>';
+  document.getElementById('lessonBody').innerHTML = ul;
+  var lb = buildNeck(document.getElementById('lessonNeck'), { maxFret: G.lv.maxFret });
+  targetsFor(G.lv).forEach(function(t){ mark(lb, t.s, t.f, 'on', t.n); });
+  show('lesson');
+}
+
+function startLevel(){
+  G.qi = 0; G.right = 0; G.wrong = 0; G.bonusScore = 0; G.streak = 0;
+  G.marks = []; G.target = null;
+  G.phase = 'quiz';
+  document.getElementById('timerbar').classList.add('hidden');
+  document.getElementById('btnHint').classList.remove('hidden');
+  document.getElementById('playWhere').textContent = G.lv.name;
+  G.board = buildNeck(document.getElementById('playNeck'), {
+    maxFret: G.lv.maxFret,
+    onPick: onPick
+  });
+  show('play');
+  nextQuestion();
+}
+
+function renderPips(){
+  var el = document.getElementById('pips');
+  if(G.phase === 'bonus'){ el.innerHTML = ''; return; }
+  var html = '';
+  for(var i = 0; i < G.total; i++){
+    var c = 'pip';
+    if(i < G.qi) c += (G.marks[i] ? ' hit' : ' miss');
+    else if(i === G.qi) c += ' now';
+    html += '<span class="' + c + '"></span>';
+  }
+  el.innerHTML = html;
+}
+G.marks = [];
+
+function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+function nextQuestion(){
+  var lv = G.lv;
+  if(G.phase === 'done') return;
+  if(G.phase === 'quiz' && G.qi >= G.total){ startBonus(); return; }
+  G.locked = false; G.hinted = false;
+  clearMarks(G.board);
+  if(lv.openNames) showOpenNames(G.board);
+  document.getElementById('verdict').textContent = '';
+  document.getElementById('verdict').className = 'verdict';
+  document.getElementById('choices').innerHTML = '';
+
+  var pool = targetsFor(lv);
+  var t = pick(pool);
+  var guard = 0;
+  while(G.target && t.s === G.target.s && t.f === G.target.f && guard++ < 12){ t = pick(pool); }
+  G.target = t;
+
+  /* bonus round is always find-the-note; quiz alternates */
+  G.mode = (G.phase === 'bonus') ? 'find' : (G.qi % 2 === 0 ? 'find' : 'name');
+
+  var askEl = document.getElementById('ask');
+  if(G.mode === 'find'){
+    var where = (lv.strings.length === 1)
+      ? 'on the ' + SWORD[lv.strings[0]].replace(' string', '') + ' string'
+      : 'anywhere you can';
+    var alsoTxt = isNatural(t.n) ? '' : 'Also called ' + flatOf(t.n) + '. ';
+    askEl.innerHTML = 'Find ' + t.n + '<small>' + alsoTxt + 'Tap it ' + where + '.</small>';
+    var freebie = allSpotsFor(t.n).some(function(x){ return x.f === 0; });
+    if(lv.openNames && freebie){
+      /* the printed open-string letter would just hand over the answer */
+      clearMarks(G.board);
+    }
+  }else{
+    mark(G.board, t.s, t.f, 'target', '?');
+    askEl.innerHTML = 'What note is this?<small>' + SWORD[t.s] + ', ' + (t.f === 0 ? 'open' : 'fret ' + t.f) + '.</small>';
+    buildChoices(t);
+  }
+  document.getElementById('tally').textContent =
+    G.phase === 'bonus' ? (G.bonusScore + ' pts') : (G.right + ' of ' + G.total);
+  renderPips();
+}
+
+function buildChoices(t){
+  var lv = G.lv;
+  var poolNames = {};
+  targetsFor(lv).forEach(function(x){ poolNames[x.n] = 1; });
+  var others = Object.keys(poolNames).filter(function(n){ return n !== t.n; });
+  var extra = ['A','B','C','D','E','F','G'].filter(function(n){ return n !== t.n && others.indexOf(n) < 0; });
+  while(others.length < 3 && extra.length){ others.push(extra.shift()); }
+  others.sort(function(){ return Math.random() - 0.5; });
+  var opts = others.slice(0, 3).concat([t.n]);
+  opts.sort(function(){ return Math.random() - 0.5; });
+
+  var box = document.getElementById('choices');
+  box.innerHTML = '';
+  opts.forEach(function(n){
+    var b = document.createElement('button');
+    b.className = 'choice'; b.type = 'button'; b.textContent = n;
+    b.addEventListener('click', function(){ answerName(n, b); });
+    box.appendChild(b);
+  });
+}
+
+function allSpotsFor(noteName){
+  return targetsFor(G.lv).filter(function(x){ return x.n === noteName; });
+}
+
+function onPick(s, f, btn){
+  if(G.mode !== 'find' || G.locked) return;
+  var lv = G.lv;
+  var inScope = lv.strings.indexOf(s) >= 0 && lv.frets.indexOf(f) >= 0;
+  var correct = inScope && noteAt(s, f) === G.target.n;
+  G.locked = true;
+  pluck(midiAt(s, f));
+  if(correct){
+    mark(G.board, s, f, 'good', G.target.n);
+    var alts = allSpotsFor(G.target.n).filter(function(x){ return !(x.s === s && x.f === f); });
+    alts.forEach(function(x){ mark(G.board, x.s, x.f, 'alt', x.n); });
+    resolve(true, alts.length ? G.target.n + ' is also here' : 'Yes — that is ' + bothNames(G.target.n));
+  }else{
+    mark(G.board, s, f, 'bad', noteAt(s, f));
+    var right = allSpotsFor(G.target.n);
+    right.forEach(function(x){ mark(G.board, x.s, x.f, 'good', x.n); });
+    resolve(false, 'That one is ' + noteAt(s, f) + '. ' + G.target.n + ' is highlighted.');
+  }
+}
+
+function answerName(n, btn){
+  if(G.locked) return;
+  G.locked = true;
+  pluck(midiAt(G.target.s, G.target.f));
+  var correct = n === G.target.n;
+  var kids = document.getElementById('choices').children;
+  for(var i = 0; i < kids.length; i++){
+    kids[i].disabled = true;
+    if(kids[i].textContent === G.target.n) kids[i].classList.add('good');
+  }
+  if(!correct) btn.classList.add('bad');
+  mark(G.board, G.target.s, G.target.f, correct ? 'good' : 'bad', G.target.n);
+  resolve(correct, correct ? 'Yes — that is ' + bothNames(G.target.n) : 'It is ' + bothNames(G.target.n) + '.');
+}
+
+function resolve(correct, msg){
+  var v = document.getElementById('verdict');
+  v.textContent = msg;
+  v.className = 'verdict ' + (correct ? 'good' : 'bad');
+  if(correct){ sfxGood(); } else { sfxBad(); }
+
+  if(G.phase === 'bonus'){
+    if(correct){
+      G.streak++;
+      G.bonusScore += 10 + (G.streak >= 3 ? 5 : 0);
+      if(G.streak >= 3) v.textContent = msg + '  \u00b7  streak ' + G.streak;
+    }else{
+      G.streak = 0;
+    }
+    document.getElementById('tally').textContent = G.bonusScore + ' pts';
+    setTimeout(function(){ if(G.phase === 'bonus') nextQuestion(); }, correct ? 620 : 1100);
+    return;
+  }
+
+  G.marks[G.qi] = correct && !G.hinted;
+  if(correct){ G.right++; } else { G.wrong++; }
+  G.qi++;
+  renderPips();
+  document.getElementById('tally').textContent = G.right + ' of ' + G.total;
+  setTimeout(nextQuestion, correct ? 900 : 1700);
+}
+
+/* ---- hint ---- */
+document.getElementById('btnHint').addEventListener('click', function(){
+  if(G.locked || G.phase === 'bonus') return;
+  G.hinted = true;
+  if(G.mode === 'find'){
+    var spots = allSpotsFor(G.target.n);
+    spots.forEach(function(x){ mark(G.board, x.s, x.f, 'on', ''); });
+    setTimeout(function(){
+      if(G.locked) return;
+      spots.forEach(function(x){
+        var b = G.board.cells[x.s][x.f];
+        b.className = 'cell'; b.firstChild.textContent = '';
+      });
+      if(G.lv.openNames) showOpenNames(G.board);
+    }, 1200);
+    document.getElementById('verdict').textContent = 'There it is — remember the shape.';
+    document.getElementById('verdict').className = 'verdict';
+  }else{
+    var kids = document.getElementById('choices').children, removed = 0;
+    for(var i = 0; i < kids.length && removed < 2; i++){
+      if(kids[i].textContent !== G.target.n && !kids[i].disabled){
+        kids[i].disabled = true; kids[i].style.opacity = .35; removed++;
+      }
+    }
+    document.getElementById('verdict').textContent = 'Two wrong answers removed.';
+  }
+});
+
+/* ---- bonus round ---- */
+function startBonus(){
+  G.phase = 'bonus'; G.bonusScore = 0; G.streak = 0;
+  document.getElementById('btnHint').classList.add('hidden');
+  document.getElementById('timerbar').classList.remove('hidden');
+  document.getElementById('playWhere').textContent = G.lv.name + ' — speed round';
+  var v = document.getElementById('verdict');
+  v.textContent = 'Twenty seconds. Find as many as you can.';
+  v.className = 'verdict';
+  G.tEnd = Date.now() + 20000;
+  tick();
+  setTimeout(nextQuestion, 900);
+}
+function tick(){
+  var left = G.tEnd - Date.now();
+  var pct = Math.max(0, Math.min(100, (left / 20000) * 100));
+  document.getElementById('timerfill').style.width = pct + '%';
+  if(left <= 0 || G.phase !== 'bonus'){
+    if(G.phase === 'bonus') finishLevel();
+    return;
+  }
+  G.tRaf = requestAnimationFrame(tick);
+}
+
+function finishLevel(){
+  G.phase = 'done';
+  cancelAnimationFrame(G.tRaf);
+  var missed = G.total - G.right;
+  var stars = missed <= 1 ? 3 : (missed <= 3 ? 2 : 1);
+  var score = G.right * 20 + G.bonusScore;
+  var prev = progress.done[G.lv.id];
+  if(!prev || score > prev.score || stars > prev.stars){
+    progress.done[G.lv.id] = { stars: Math.max(stars, prev ? prev.stars : 0), score: Math.max(score, prev ? prev.score : 0) };
+    saveProgress();
+  }
+  document.getElementById('resTitle').textContent = G.lv.name + ' cleared';
+  document.getElementById('resSub').textContent =
+    stars === 3 ? 'Clean run. You know this one.' :
+    stars === 2 ? 'Solid. A couple of slips.' :
+                  'Getting there — try the level once more.';
+  document.getElementById('resStars').innerHTML = starStr(stars);
+  document.getElementById('resScore').textContent = score + ' points';
+  document.getElementById('resDetail').textContent =
+    G.right + ' of ' + G.total + ' questions right, plus ' + G.bonusScore + ' from the speed round.';
+  document.getElementById('btnNext').classList.toggle('hidden', G.li >= LEVELS.length - 1);
+  renderMap();
+  show('result');
+}
+
+/* ============ explore ============ */
+function openExplore(){
+  var lab = document.getElementById('exploreLabel');
+  lab.textContent = '';
+  var b = buildNeck(document.getElementById('exploreNeck'), {
+    maxFret: 12,
+    onPick: function(s, f){
+      clearMarks(b); showOpenNames(b);
+      mark(b, s, f, 'on', noteAt(s, f));
+      pluck(midiAt(s, f));
+      var n = noteAt(s, f);
+      lab.innerHTML = (isNatural(n) ? n : n + ' / ' + flatOf(n)) +
+        '<small>' + SWORD[s] + ', ' + (f === 0 ? 'open string' : 'fret ' + f) + '</small>';
+    }
+  });
+  showOpenNames(b);
+  show('explore');
+}
+
+/* ============ wiring ============ */
+document.getElementById('btnStartQs').addEventListener('click', startLevel);
+document.getElementById('btnLessonBack').addEventListener('click', function(){ renderMap(); show('map'); });
+document.getElementById('btnQuit').addEventListener('click', function(){
+  G.phase = 'done'; cancelAnimationFrame(G.tRaf); renderMap(); show('map');
+});
+document.getElementById('btnHome').addEventListener('click', function(){ renderMap(); show('map'); });
+document.getElementById('btnRetry').addEventListener('click', function(){ openLesson(G.li); });
+document.getElementById('btnNext').addEventListener('click', function(){
+  if(G.li < LEVELS.length - 1) openLesson(G.li + 1);
+});
+document.getElementById('btnExplore').addEventListener('click', openExplore);
+document.getElementById('btnExploreBack').addEventListener('click', function(){ renderMap(); show('map'); });
+document.getElementById('btnReset').addEventListener('click', function(){
+  progress = { done: {} }; saveProgress(); renderMap();
+});
+
+/* decorative neck on the map screen */
+(function(){
+  var b = buildNeck(document.getElementById('mapNeck'), { maxFret: 12 });
+  showOpenNames(b);
+})();
+
+renderMap();
+show('map');
+loadProgress().then(renderMap, renderMap);
+
+})();
+</script>
+</body>
+</html>
