@@ -1,6 +1,6 @@
 # Project Status — Dalton's Website
 
-> Last updated: 2026-10-21 · Keep this file current as the project moves.
+> Last updated: 2026-10-22 · Keep this file current as the project moves.
 
 ## What this is
 
@@ -18,32 +18,49 @@ Focus: educational games for learning guitar and music theory, plus a blog.
 | Game file | `fret-quest.html` (self-contained; in-repo copy) |
 | Game live URL | `https://daltonthompson.com/fret-quest.html` |
 
+## Hosting (confirmed 2026-10-22)
+
+| Item | Value |
+|------|-------|
+| Type | Shared Linux host (Debian) |
+| Origin IP | `65.254.248.180` |
+| CDN / proxy | **Cloudflare** in front of the domain (DNS resolves to Cloudflare, not the origin IP) |
+| Deploy method | **SFTP** → `ftp.daltonthompson.com` port **2222** |
+| FTP (plain) | port 21 open — prefer SFTP |
+| Document root | `/home/users/web/b2682/moo.barrythompson` |
+| CGI | Active |
+| PHP | 8.4.7 (not needed for static site) |
+| MySQL | 5.7 (could power a real blog later) |
+| Perl | 5.8.8 (not needed) |
+
+> The site is **static** — no PHP/MySQL/Perl required today.
+
 ## Done ✅
 
 - [x] Created the GitHub repo (public)
 - [x] Scaffolded the site: `index.html`, `games.html`, `blog.html`, `about.html`
 - [x] Shared stylesheet (`assets/css/style.css`)
 - [x] Copied Fret Quest into the repo and linked it via relative path (`fret-quest.html`)
-- [x] Added `CNAME` → `daltonthompson.com` (ready for GitHub Pages)
+- [x] Added `CNAME` → `daltonthompson.com` (GitHub Pages only — irrelevant for SFTP deploy, harmless to keep)
+- [x] Confirmed SFTP port 2222 reachable and domain proxied via Cloudflare
 
-## Not done / blocked ⏳
+## Blocked / pending ⏳
 
-- [ ] **Deploy the new site to `daltonthompson.com`** — the domain is already
-      pointed at an existing host (that's how `fret-quest.html` is live), but the
-      hosting provider is **unknown** and the credentials aren't available yet.
-- [ ] Confirm which host is serving the domain (GitHub Pages? Netlify? Vercel? other?)
-- [ ] Fill in Dalton's real bio on `about.html` (marked with a `TODO`)
-- [ ] Add first blog post
-- [ ] Build more games (scales, chords, rhythm, theory)
+- [ ] **SFTP credentials** — need username + password (or SSH key) to deploy.
+- [ ] Deploy the repo files to the document root (overwrite the current `index.html`).
+- [ ] Fill in Dalton's real bio on `about.html` (marked with a `TODO`).
+- [ ] Add first blog post.
+- [ ] Build more games (scales, chords, rhythm, theory).
 
 ## Next steps (to resume)
 
-1. Identify the current host for `daltonthompson.com` (check DNS records, or find the credentials).
-2. Decide deployment path:
-   - **GitHub Pages** — enable Pages on this repo (Settings → Pages → `main` branch),
-     then point DNS `A`/`CNAME` records at GitHub. Free, keeps everything in one place.
-   - **Existing host** — connect this repo to that host (Netlify/Vercel/etc.) instead.
-3. Confirm the new `index.html` renders at the domain root, with Fret Quest still reachable.
+1. Get the SFTP username + password/SSH key for the hosting account.
+2. Back up the current document root (safety) before overwriting.
+3. Upload via SFTP to `ftp.daltonthompson.com:2222` → document root:
+   - `index.html`, `games.html`, `blog.html`, `about.html`, `fret-quest.html`, `assets/`
+   - (`CNAME` is not needed on this host.)
+4. **Purge Cloudflare cache** after upload — HTML is cached up to ~1h (`cache-control: max-age=3600`), so changes may not appear immediately otherwise.
+5. Verify the new home page renders at `https://daltonthompson.com/` and Fret Quest still works.
 
 ## How to pick this back up
 
